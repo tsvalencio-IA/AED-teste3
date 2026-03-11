@@ -733,7 +733,7 @@ function carregarMecanismoAdmin() {
             const d = c.val(); 
             const geoBadge = (d.lat && d.lng) ? `<span class="bg-green-100 text-green-700 text-[8px] px-1 rounded ml-2" title="Coordenadas Salvas">GPS OK</span>` : `<span class="bg-red-100 text-red-700 text-[8px] px-1 rounded ml-2" title="Sem GPS">FALHA GPS</span>`;
             h += `<tr class="hover:bg-slate-50 transition border-b"><td class="p-4 font-black text-slate-800 text-xs uppercase flex items-center">${d.nome} ${geoBadge}</td><td class="p-4 text-xs font-bold text-slate-600">${d.tel}</td><td class="p-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">${d.cid}</td><td class="p-4 text-center whitespace-nowrap">
-                <button onclick="window.editarCliente('${c.key}', '${escapeHtml(d.nome)}', '${escapeHtml(d.tel)}', '${escapeHtml(d.cid)}', '${escapeHtml(d.end || '')}', '${escapeHtml(d.comprador || '')}', '${escapeHtml(d.dono || '')}', '${escapeHtml(d.pessoa_contato || '')}', '${escapeHtml(d.email_contato || '')}', '${escapeHtml(d.telefone_contato || '')}')" class="text-blue-400 hover:text-blue-600 mr-3"><i class='bx bx-edit text-lg'></i></button>
+                <button onclick="window.editarCliente('${c.key}', '${escapeHtml(d.nome)}', '${escapeHtml(d.tel)}', '${escapeHtml(d.cid)}', '${escapeHtml(d.end || '')}', '${escapeHtml(d.comprador || '')}', '${escapeHtml(d.dono || '')}', '${escapeHtml(d.pessoa_contato || '')}', '${escapeHtml(d.email_contato || '')}', '${escapeHtml(d.telefone_contato || '')}', '${escapeHtml(d.obs || '')}')" class="text-blue-400 hover:text-blue-600 mr-3"><i class='bx bx-edit text-lg'></i></button>
                 <button onclick="window.excluir('clientes', '${c.key}')" class="text-red-300 hover:text-red-600"><i class='bx bx-trash text-lg'></i></button>
             </td></tr>`; 
         });
@@ -800,62 +800,110 @@ function carregarMecanismoAdmin() {
         eventos.sort((a,b) => b.data - a.data); 
 
         let oCount = eventos.length;
-        let agrupadosPorMotorista = {};
+        let grouped = {};
         
         eventos.forEach(d => {
             let mot = d.motorista || "Sem Identificação";
-            if(!agrupadosPorMotorista[mot]) agrupadosPorMotorista[mot] = [];
-            agrupadosPorMotorista[mot].push(d);
+            let rota = d.veiculo || "Sem Rota";
+            if(!grouped[mot]) grouped[mot] = {};
+            if(!grouped[mot][rota]) grouped[mot][rota] = [];
+            grouped[mot][rota].push(d);
         });
 
         let h = ''; 
+        let motIndex = 0;
         
-        for(let mot in agrupadosPorMotorista) {
-            let motIdSafe = mot.replace(/\W/g, ''); // Garante ID valido para o CSS selector
+        for(let mot in grouped) {
+            motIndex++;
+            let totalMotEvents = Object.values(grouped[mot]).flat().length;
+            let motIdSafe = 'mot_' + mot.replace(/\W/g, '') + motIndex;
             
-            h += `<div class="bg-slate-50 border border-slate-200 rounded-2xl mb-6 overflow-hidden shadow-sm">
-                    <div class="bg-slate-800 hover:bg-slate-900 transition p-3 sm:p-4 text-white flex items-center justify-between cursor-pointer" onclick="document.getElementById('mot-box-${motIdSafe}').classList.toggle('hidden'); this.querySelector('.bx-chevron-down').classList.toggle('rotate-180')">
-                        <h4 class="font-black text-xs sm:text-sm uppercase tracking-widest flex items-center gap-2"><i class='bx bx-user-circle text-amber-500 text-xl'></i> Motorista: ${mot}</h4>
-                        <div class="flex items-center gap-3">
-                            <span class="bg-slate-700 text-[9px] px-2 py-1 rounded font-bold">${agrupadosPorMotorista[mot].length} Registros</span>
-                            <i class='bx bx-chevron-down text-xl transition-transform duration-300'></i>
+            h += `<div class="bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm overflow-hidden">
+                    <div class="bg-slate-900 hover:bg-black transition p-4 sm:p-5 text-white flex items-center justify-between cursor-pointer" onclick="document.getElementById('${motIdSafe}').classList.toggle('hidden'); this.querySelector('.bx-chevron-down').classList.toggle('rotate-180')">
+                        <h4 class="font-black text-sm sm:text-base uppercase tracking-widest flex items-center gap-3"><i class='bx bxs-user-badge text-blue-500 text-2xl'></i> ${mot}</h4>
+                        <div class="flex items-center gap-4">
+                            <span class="bg-blue-600 text-[10px] px-3 py-1.5 rounded-lg font-black tracking-widest">${totalMotEvents} EVENTOS</span>
+                            <i class='bx bx-chevron-down text-2xl transition-transform duration-300'></i>
                         </div>
                     </div>
-                    <div id="mot-box-${motIdSafe}" class="p-4 sm:p-6 space-y-6 hidden">`;
+                    <div id="${motIdSafe}" class="p-4 sm:p-6 space-y-6 hidden bg-slate-50">`;
             
-            agrupadosPorMotorista[mot].forEach(d => {
-                let corDot = 'bg-slate-500';
-                let corValor = 'text-slate-600';
-                let icone = "<i class='bx bxs-truck'></i>";
+            let rotaIndex = 0;
+            for(let rota in grouped[mot]) {
+                rotaIndex++;
+                let rotaIdSafe = motIdSafe + '_rota_' + rotaIndex;
+                let eventosRota = grouped[mot][rota];
 
-                if (d.tipo && d.tipo.includes('Visita')) { corDot = 'bg-amber-500'; corValor = 'text-amber-600'; icone = "<i class='bx bx-briefcase'></i>"; }
-                if (d.tipo && d.tipo.includes('Entrega')) { corDot = 'bg-green-500'; corValor = 'text-green-600'; icone = "<i class='bx bx-check-shield'></i>"; }
-
-                const lnk = d.imgUrl ? `<a href="${d.imgUrl}" target="_blank" class="block w-max px-4 text-center bg-slate-900 text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] mt-3 shadow-lg active:scale-95 transition">Ver Recibo (R$ ${parseFloat(d.valor||0).toFixed(2)})</a>` : ``;
-                const renderValor = (d.valor && parseFloat(d.valor)>0 && !d.tipo.includes('Visita') && !d.tipo.includes('Entrega')) ? `<p class="text-lg font-black ${corValor}">R$ ${parseFloat(d.valor||0).toFixed(2)}</p>` : ((d.valor && parseFloat(d.valor)>0) ? `<p class="text-sm font-black ${corValor}">R$ ${parseFloat(d.valor||0).toFixed(2)}</p>` : '');
-
-                h += `
-                <div class="relative pl-6">
-                    <div class="absolute -left-[5px] top-1 w-3 h-3 rounded-full ${corDot} shadow shadow-slate-300"></div>
-                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm relative hover:shadow-md transition">
-                        <div class="flex justify-between items-start mb-2 border-b border-slate-100 pb-2">
-                            <div>
-                                <p class="text-[9px] sm:text-[10px] font-black text-slate-800 uppercase tracking-widest">${icone} ${d.tipo}</p>
-                                <p class="text-[8px] text-slate-400 font-bold uppercase mt-1 tracking-wider"><i class='bx bx-time-five'></i> ${new Date(d.data).toLocaleString('pt-BR')} &bull; VIA: ${d.veiculo}</p>
+                h += `<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden ml-2 sm:ml-4 border-l-4 border-l-indigo-500">
+                        <div class="bg-slate-100 hover:bg-slate-200 transition p-3 sm:p-4 flex items-center justify-between cursor-pointer border-b border-slate-200" onclick="document.getElementById('${rotaIdSafe}').classList.toggle('hidden'); this.querySelector('.bx-chevron-down').classList.toggle('rotate-180')">
+                            <h5 class="font-black text-xs sm:text-sm text-slate-700 uppercase tracking-widest flex items-center gap-2"><i class='bx bxs-truck text-indigo-500 text-lg'></i> ROTA: ${rota}</h5>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold text-slate-500">${eventosRota.length} registros</span>
+                                <i class='bx bx-chevron-down text-lg text-slate-500 transition-transform duration-300'></i>
                             </div>
-                            ${renderValor}
                         </div>
-                        <p class="text-xs text-slate-600 font-medium leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner mt-2">"${d.desc}"</p>
-                        ${lnk}
-                        <button onclick="window.excluir('ocorrencias', '${d.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 transition"><i class='bx bx-x text-xl'></i></button>
-                    </div>
-                </div>`;
-            });
+                        <div id="${rotaIdSafe}" class="p-4 sm:p-5 space-y-5 hidden bg-white">`;
+
+                eventosRota.forEach(d => {
+                    let corBorder = 'border-slate-200';
+                    let corIcone = 'text-slate-500';
+                    let icone = "<i class='bx bx-info-circle'></i>";
+                    let bgIcone = "bg-slate-100";
+
+                    if (d.tipo && d.tipo.includes('Visita') && d.desc && d.desc.includes('Venda')) {
+                        corBorder = 'border-emerald-200'; corIcone = 'text-emerald-600'; icone = "<i class='bx bx-money'></i>"; bgIcone = "bg-emerald-100";
+                    } else if (d.tipo && d.tipo.includes('Visita')) {
+                        corBorder = 'border-amber-200'; corIcone = 'text-amber-600'; icone = "<i class='bx bxs-user-detail'></i>"; bgIcone = "bg-amber-100";
+                    } else if (d.tipo && d.tipo.includes('Entrega')) {
+                        corBorder = 'border-blue-200'; corIcone = 'text-blue-600'; icone = "<i class='bx bx-package'></i>"; bgIcone = "bg-blue-100";
+                    } else if (d.tipo && d.tipo.includes('Combustível')) {
+                        corBorder = 'border-orange-200'; corIcone = 'text-orange-600'; icone = "<i class='bx bxs-gas-pump'></i>"; bgIcone = "bg-orange-100";
+                    } else if (d.tipo && d.tipo.includes('Pedágio')) {
+                        corBorder = 'border-slate-300'; corIcone = 'text-slate-700'; icone = "<i class='bx bx-barrier'></i>"; bgIcone = "bg-slate-200";
+                    }
+
+                    const lnk = d.imgUrl ? `<a href="${d.imgUrl}" target="_blank" class="inline-block mt-3 px-4 py-2 bg-slate-800 hover:bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md transition"><i class='bx bx-link-external'></i> Ver Anexo</a>` : ``;
+
+                    let detalhesComissao = '';
+                    if(d.tipoVenda === 'oportunidade' && parseFloat(d.taxa_sistema) > 0) {
+                        detalhesComissao = `<span class="block mt-3 text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded inline-block border border-indigo-100"><i class='bx bx-coin-stack'></i> Taxa Plataforma IA: R$ ${parseFloat(d.taxa_sistema).toFixed(2)}</span>`;
+                    }
+                    
+                    let badgeTipoVenda = '';
+                    if(d.tipoVenda) {
+                        let corBadge = d.tipoVenda === 'oportunidade' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white';
+                        badgeTipoVenda = `<span class="${corBadge} text-[8px] font-black uppercase px-2 py-0.5 rounded ml-2 tracking-widest shadow-sm">${d.tipoVenda}</span>`;
+                    }
+
+                    const renderValor = (d.valor && parseFloat(d.valor)>0) ? `<div class="text-right flex-shrink-0"><p class="text-sm sm:text-base font-black ${corIcone}">R$ ${parseFloat(d.valor).toFixed(2)}</p></div>` : '';
+
+                    h += `
+                    <div class="flex gap-4 relative">
+                        <div class="w-10 h-10 rounded-full ${bgIcone} ${corIcone} flex items-center justify-center text-xl flex-shrink-0 shadow-sm border ${corBorder} z-10">${icone}</div>
+                        <div class="absolute left-5 top-10 bottom-[-20px] w-0.5 bg-slate-100 z-0 last:hidden"></div>
+                        <div class="flex-grow bg-white border ${corBorder} p-4 rounded-xl shadow-sm hover:shadow-md transition relative">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">${d.tipo} ${badgeTipoVenda}</p>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider"><i class='bx bx-time-five'></i> ${new Date(d.data).toLocaleString('pt-BR')}</p>
+                                </div>
+                                ${renderValor}
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2">"${d.desc}"</p>
+                            ${detalhesComissao}
+                            ${lnk}
+                            <button onclick="window.excluir('ocorrencias', '${d.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 transition" title="Excluir Registro"><i class='bx bx-x text-xl'></i></button>
+                        </div>
+                    </div>`;
+                });
+
+                h += `</div></div>`; 
+            }
             
             h += `</div></div>`; 
         }
         
-        const loc = document.getElementById('lista-ocorrencias'); if(loc) loc.innerHTML = h || "<p class='text-xs font-black text-slate-400 uppercase text-center mt-10'>Sem atividade de campo registrada.</p>";
+        const loc = document.getElementById('lista-ocorrencias'); if(loc) loc.innerHTML = h || "<div class='text-center p-10 bg-slate-50 rounded-2xl border border-slate-200'><i class='bx bx-ghost text-5xl text-slate-300 mb-3'></i><p class='text-xs font-black text-slate-400 uppercase tracking-widest'>Nenhuma atividade registrada.</p></div>";
         const doc = document.getElementById('dash-ocorrencias'); if(doc) doc.innerText = oCount;
     });
 
@@ -911,8 +959,9 @@ if(frmCliente) {
         const pContato = document.getElementById('cli-pessoa-contato').value;
         const eContato = document.getElementById('cli-email-contato').value;
         const tContato = document.getElementById('cli-telefone-contato').value;
+        const obs = document.getElementById('cli-obs').value;
 
-        const payload = { nome, tel, cid, end, comprador, dono, pessoa_contato: pContato, email_contato: eContato, telefone_contato: tContato };
+        const payload = { nome, tel, cid, end, comprador, dono, pessoa_contato: pContato, email_contato: eContato, telefone_contato: tContato, obs };
 
         if (clienteGooglePlaceLocation) {
             payload.end = clienteGooglePlaceLocation.formatted_address; payload.lat = clienteGooglePlaceLocation.lat; payload.lng = clienteGooglePlaceLocation.lng;
@@ -941,7 +990,7 @@ if(frmCliente) {
     };
 }
 
-window.editarCliente = function(id, nome, tel, cid, end, comprador, dono, pContato, eContato, tContato) {
+window.editarCliente = function(id, nome, tel, cid, end, comprador, dono, pContato, eContato, tContato, obs) {
     document.getElementById('edit-cli-id').value = id;
     document.getElementById('edit-cli-nome').value = nome;
     document.getElementById('edit-cli-tel').value = tel;
@@ -953,6 +1002,7 @@ window.editarCliente = function(id, nome, tel, cid, end, comprador, dono, pConta
     document.getElementById('edit-cli-pessoa-contato').value = pContato || '';
     document.getElementById('edit-cli-email-contato').value = eContato || '';
     document.getElementById('edit-cli-telefone-contato').value = tContato || '';
+    document.getElementById('edit-cli-obs').value = obs || '';
 
     editClienteGooglePlaceLocation = null;
     window.abrirModal('modal-edit-cliente');
@@ -976,8 +1026,9 @@ if(frmEditCliente) {
         const pContato = document.getElementById('edit-cli-pessoa-contato').value;
         const eContato = document.getElementById('edit-cli-email-contato').value;
         const tContato = document.getElementById('edit-cli-telefone-contato').value;
+        const obs = document.getElementById('edit-cli-obs').value;
 
-        const payload = { nome, tel, cid, end, comprador, dono, pessoa_contato: pContato, email_contato: eContato, telefone_contato: tContato };
+        const payload = { nome, tel, cid, end, comprador, dono, pessoa_contato: pContato, email_contato: eContato, telefone_contato: tContato, obs };
 
         if (editClienteGooglePlaceLocation) {
             payload.end = editClienteGooglePlaceLocation.formatted_address; payload.lat = editClienteGooglePlaceLocation.lat; payload.lng = editClienteGooglePlaceLocation.lng;
@@ -1543,14 +1594,16 @@ if(frmVisita) {
 
         try {
             const acao = document.getElementById('vis-acao').value;
+            const tipoVendaSelect = document.getElementById('vis-tipo-venda');
+            const tipoVenda = tipoVendaSelect ? tipoVendaSelect.value : 'oportunidade';
             const valor = parseFloat(document.getElementById('vis-valor').value || 0);
             const obs = document.getElementById('vis-obs').value;
             const cliNome = document.getElementById('vis-cliente-nome').value;
             const cliId = document.getElementById('vis-cliente-id').value;
 
-            // MONETIZAÇÃO
+            // MONETIZAÇÃO ATUALIZADA
             let taxaSistema = 0;
-            if (acao === 'Venda Realizada (Oportunidade)' && valor > 0) {
+            if (acao === 'Venda Realizada' && tipoVenda === 'oportunidade' && valor > 0) {
                 taxaSistema = valor * (PERCENTUAL_SISTEMA / 100);
             }
 
@@ -1558,6 +1611,7 @@ if(frmVisita) {
                 veiculo: veiculoDoRomaneio || "Indeterminado", 
                 motorista: currentDriverName, 
                 tipo: `Visita Comercial`, 
+                tipoVenda: tipoVenda,
                 valor: valor, 
                 taxa_sistema: taxaSistema,
                 desc: `CLIENTE: ${cliNome} | AÇÃO: ${acao} | OBS: ${obs}`, 
@@ -1763,10 +1817,13 @@ window.carregarRelatorios = async function() {
 
         let entregasPorMot = {};
         let viagensRealizadas = 0;
+        let vendasProgramadas = 0;
         let vendasOportunidade = 0;
+        let totalVendidoProgramado = 0;
         let totalVendidoOportunidade = 0;
         let comissoesSistema = 0;
         let despesasPorVeiculo = {};
+        let totalVisitas = 0;
 
         if(snapCargas.exists()) {
             snapCargas.forEach(c => {
@@ -1782,11 +1839,21 @@ window.carregarRelatorios = async function() {
         if(snapOco.exists()) {
             snapOco.forEach(o => {
                 const d = o.val();
-                if(d.tipo === 'Visita Comercial' && d.desc && d.desc.includes('Venda Realizada (Oportunidade)')) {
-                    vendasOportunidade++;
-                    totalVendidoOportunidade += parseFloat(d.valor || 0);
-                    comissoesSistema += parseFloat(d.taxa_sistema || 0);
+                
+                if(d.tipo === 'Visita Comercial') {
+                    totalVisitas++;
+                    if(d.desc && d.desc.includes('Venda Realizada')) {
+                        if(d.tipoVenda === 'programada') {
+                            vendasProgramadas++;
+                            totalVendidoProgramado += parseFloat(d.valor || 0);
+                        } else {
+                            vendasOportunidade++;
+                            totalVendidoOportunidade += parseFloat(d.valor || 0);
+                            comissoesSistema += parseFloat(d.taxa_sistema || 0);
+                        }
+                    }
                 }
+                
                 if(d.tipo === 'Combustível' || d.tipo === 'Pedágio' || d.tipo === 'Oficina' || d.tipo === 'Almoço') {
                     const vec = d.veiculo || "Indeterminado";
                     despesasPorVeiculo[vec] = (despesasPorVeiculo[vec] || 0) + parseFloat(d.valor || 0);
@@ -1808,18 +1875,22 @@ window.carregarRelatorios = async function() {
         relDiv.innerHTML = `
             <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
                 <h3 class="font-black text-slate-800 uppercase tracking-tighter text-lg mb-4 flex items-center gap-2"><i class='bx bx-pie-chart-alt-2 text-indigo-500'></i> DRE Logístico e Comercial</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <p class="text-[9px] text-slate-500 font-black uppercase tracking-widest">Entregas Finalizadas</p>
-                        <p class="text-3xl font-black text-slate-800 mt-1">${viagensRealizadas}</p>
+                        <p class="text-[9px] text-slate-500 font-black uppercase tracking-widest">Entregas e Visitas</p>
+                        <p class="text-2xl font-black text-slate-800 mt-1">${viagensRealizadas} <span class="text-[10px] font-bold text-slate-400 align-middle">Ent.</span> | ${totalVisitas} <span class="text-[10px] font-bold text-slate-400 align-middle">Vis.</span></p>
                     </div>
-                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                        <p class="text-[9px] text-emerald-600 font-black uppercase tracking-widest">Radar de Oportunidades (Vendas)</p>
-                        <p class="text-3xl font-black text-emerald-700 mt-1">${vendasOportunidade} <span class="text-sm">/ R$ ${totalVendidoOportunidade.toFixed(2)}</span></p>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                        <p class="text-[9px] text-blue-600 font-black uppercase tracking-widest">Vendas Programadas</p>
+                        <p class="text-2xl font-black text-blue-700 mt-1">${vendasProgramadas} <span class="text-xs">/ R$ ${totalVendidoProgramado.toFixed(2)}</span></p>
+                    </div>
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                        <p class="text-[9px] text-amber-600 font-black uppercase tracking-widest">Vendas Oportunidade</p>
+                        <p class="text-2xl font-black text-amber-700 mt-1">${vendasOportunidade} <span class="text-xs">/ R$ ${totalVendidoOportunidade.toFixed(2)}</span></p>
                     </div>
                     <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
                         <p class="text-[9px] text-indigo-600 font-black uppercase tracking-widest">Taxas da Plataforma (${PERCENTUAL_SISTEMA}%)</p>
-                        <p class="text-3xl font-black text-indigo-700 mt-1">R$ ${comissoesSistema.toFixed(2)}</p>
+                        <p class="text-2xl font-black text-indigo-700 mt-1">R$ ${comissoesSistema.toFixed(2)}</p>
                     </div>
                 </div>
             </div>
