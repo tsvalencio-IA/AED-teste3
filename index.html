@@ -21,7 +21,7 @@
 <body class="text-slate-800 flex h-screen overflow-hidden relative">
 
     <!-- ================= ASSINATURA DO SISTEMA ================= -->
-    <div class="fixed bottom-1 right-2 text-[8px] font-black text-slate-400/50 uppercase z-[9999] pointer-events-none">
+    <div class="fixed bottom-1 right-2 text-[9px] font-black text-slate-400/60 uppercase z-[9999] pointer-events-none tracking-widest">
         Powered by thIAguinho Soluções
     </div>
 
@@ -140,7 +140,7 @@
                 </div>
             </header>
 
-            <div class="flex-grow overflow-y-auto p-4 sm:p-6 relative">
+            <div class="flex-grow overflow-y-auto p-4 sm:p-6 relative pb-12">
                 
                 <!-- 1. DASHBOARD -->
                 <div id="view-dashboard" class="view-content space-y-6">
@@ -190,13 +190,11 @@
                 <!-- 3. OCORRÊNCIAS / AUDITORIA TIMELINE -->
                 <div id="view-ocorrencias" class="view-content hidden-view space-y-4">
                     <div class="bg-white p-4 sm:p-5 rounded-2xl border shadow-sm">
-                        <h3 class="font-black text-slate-800 uppercase tracking-tighter text-lg">Auditoria de Despesas e Entregas</h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Linha do Tempo: Entregas Concluídas, Visitas, Pedágios e Combustível na Rota</p>
+                        <h3 class="font-black text-slate-800 uppercase tracking-tighter text-lg">Auditoria e Linha do Tempo</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Monitoramento Nível 3: Motorista → Rotas → Eventos</p>
                     </div>
-                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border">
-                        <div id="lista-ocorrencias" class="space-y-4 pb-4">
-                            <!-- Timeline Items inserted by JS com Blocos Colapsáveis -->
-                        </div>
+                    <div id="lista-ocorrencias" class="space-y-6">
+                        <!-- Timeline Items inserted by JS com Blocos Colapsáveis -->
                     </div>
                 </div>
 
@@ -294,7 +292,7 @@
                     </div>
                 </div>
 
-                <!-- VIEW RELATÓRIOS (NOVO) -->
+                <!-- VIEW RELATÓRIOS -->
                 <div id="view-relatorios" class="view-content hidden-view space-y-6">
                     <!-- Será populado via JS dinamicamente com base nas métricas -->
                 </div>
@@ -401,7 +399,7 @@
                                     <span id="cloud-bytes-display" class="text-[8px] sm:text-[9px] font-black text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-100 uppercase tracking-widest">0.00 MB</span>
                                 </div>
                             </div>
-                            <!-- NOVA CONFIGURAÇÃO DA TAXA DA PLATAFORMA -->
+                            <!-- CONFIGURAÇÃO DA TAXA DA PLATAFORMA -->
                             <div class="bg-emerald-50 p-4 sm:p-6 rounded-2xl border-2 border-emerald-100">
                                 <label class="block text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-2 ml-1">Taxa da Plataforma (%) - Vendas de Oportunidade</label>
                                 <input type="number" id="config-taxa" value="5" step="0.1" class="w-full p-3 sm:p-4 border border-emerald-200 rounded-xl font-mono text-xs sm:text-sm outline-none focus:border-emerald-500 bg-white transition shadow-inner">
@@ -493,7 +491,7 @@
         </div>
     </div>
 
-    <!-- Modal Editar Cliente (ATUALIZADO COM 5 NOVOS CAMPOS) -->
+    <!-- Modal Editar Cliente (ATUALIZADO COM NOVOS CAMPOS) -->
     <div id="modal-edit-cliente" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-lg p-5 sm:p-8 shadow-2xl max-h-[95vh] overflow-y-auto">
             <h3 class="font-black uppercase mb-4 sm:mb-6 text-xs sm:text-sm flex items-center gap-2"><i class='bx bx-edit text-blue-500'></i> Editar Dados da Loja</h3>
@@ -506,13 +504,13 @@
                     <input type="text" id="edit-cli-cidade" placeholder="Cidade (UF)" required class="w-full sm:w-1/2 p-3 sm:p-4 border rounded-xl sm:rounded-2xl text-xs sm:text-sm">
                 </div>
 
-                <!-- 5 NOVOS CAMPOS AQUI -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-100 pt-3">
                     <input type="text" id="edit-cli-comprador" placeholder="Comprador" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="edit-cli-dono" placeholder="Dono" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="edit-cli-pessoa-contato" placeholder="Pessoa de Contato" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="email" id="edit-cli-email-contato" placeholder="E-mail de Contato" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="edit-cli-telefone-contato" placeholder="Telefone Contato Extra" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none sm:col-span-2">
+                    <textarea id="edit-cli-obs" placeholder="Observações Gerais..." class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none sm:col-span-2 resize-none" rows="2"></textarea>
                 </div>
 
                 <div class="bg-blue-50 border border-blue-200 p-2 sm:p-3 rounded-xl mb-1 mt-1 sm:mt-2">
@@ -640,10 +638,16 @@
                 <input type="hidden" id="vis-cliente-nome">
                 
                 <select id="vis-acao" class="w-full p-3 sm:p-4 rounded-xl bg-slate-900 text-white border border-slate-600 outline-none focus:border-amber-500 font-bold text-xs sm:text-sm">
-                    <option value="Venda Realizada (Oportunidade)">Fizemos uma Venda na Parada</option>
+                    <option value="Venda Realizada">Fizemos uma Venda na Parada</option>
                     <option value="Reposição de Mostruário">Reposição de Mostruário</option>
                     <option value="Apenas Visita de Relacionamento">Apenas Visita (Relacionamento)</option>
                     <option value="Cliente Fechado / Ausente">Cliente Fechado / Ausente</option>
+                </select>
+
+                <!-- NOVO SELECT DIFERENCIAÇÃO DE VENDA -->
+                <select id="vis-tipo-venda" class="w-full p-3 sm:p-4 rounded-xl bg-slate-900 text-amber-400 border border-slate-600 outline-none focus:border-amber-500 font-bold text-[10px] sm:text-xs uppercase tracking-widest">
+                    <option value="oportunidade">Venda de Oportunidade (Radar IA)</option>
+                    <option value="programada">Venda Programada (Rota Original)</option>
                 </select>
                 
                 <input type="number" step="0.01" id="vis-valor" placeholder="Valor Vendido R$ (Opcional)" class="w-full p-3 sm:p-4 rounded-xl bg-slate-900 border border-slate-700 text-amber-500 font-black text-base sm:text-lg text-center">
@@ -658,7 +662,7 @@
         </div>
     </div>
 
-    <!-- Modal Cliente (Cadastro Novo - ATUALIZADO COM 5 NOVOS CAMPOS) -->
+    <!-- Modal Cliente (Cadastro Novo - ATUALIZADO COM NOVOS CAMPOS) -->
     <div id="modal-cliente" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[200] p-4">
         <div class="bg-white rounded-3xl w-full max-w-lg p-5 sm:p-8 shadow-2xl max-h-[95vh] overflow-y-auto">
             <h3 class="font-black uppercase mb-4 sm:mb-6 text-xs sm:text-sm flex items-center gap-2"><i class='bx bxs-store text-red-600'></i> Nova Loja na Base</h3>
@@ -669,13 +673,13 @@
                     <input type="text" id="cli-cidade" placeholder="Cidade (UF)" required class="w-full sm:w-1/2 p-3 sm:p-4 border rounded-xl sm:rounded-2xl text-xs sm:text-sm">
                 </div>
 
-                <!-- 5 NOVOS CAMPOS AQUI -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-100 pt-3">
                     <input type="text" id="cli-comprador" placeholder="Comprador" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="cli-dono" placeholder="Dono" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="cli-pessoa-contato" placeholder="Pessoa de Contato" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="email" id="cli-email-contato" placeholder="E-mail de Contato" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none">
                     <input type="text" id="cli-telefone-contato" placeholder="Telefone Contato Extra" class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none sm:col-span-2">
+                    <textarea id="cli-obs" placeholder="Observações Gerais..." class="w-full p-3 border rounded-xl text-xs bg-slate-50 outline-none sm:col-span-2 resize-none" rows="2"></textarea>
                 </div>
                 
                 <div class="bg-blue-50 border border-blue-200 p-2 sm:p-3 rounded-xl mb-1 mt-1 sm:mt-2">
